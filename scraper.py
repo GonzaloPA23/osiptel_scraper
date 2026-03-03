@@ -259,11 +259,25 @@ def paginate_all(driver) -> Dict[str, int]:
             break
     return dict(counts)
 
+def esta_en_osiptel(drv) -> bool:
+    """Verifica si OSIPTEL está cargado correctamente."""
+    try:
+        drv.find_element(By.ID, "IdTipoDoc")
+        return True
+    except Exception:
+        return False
+
 def scrape_ruc(ruc: str) -> Dict:
     for intento in range(1, 4):
         try:
             drv = driver_mgr.get()
             print(f"[{ruc}] Intento {intento}...")
+
+            # ✅ Si OSIPTEL no está cargado, cargarlo primero
+            if not esta_en_osiptel(drv):
+                print("   🌐 Cargando OSIPTEL antes de consultar...")
+                driver_mgr.go_home()
+                drv = driver_mgr.get()
 
             Select(drv.find_element(By.ID, "IdTipoDoc")).select_by_value("2")
             box = drv.find_element(By.ID, "NumeroDocumento")
@@ -352,3 +366,4 @@ def reiniciar_chrome():
         return {"mensaje": "Chrome reiniciado correctamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
