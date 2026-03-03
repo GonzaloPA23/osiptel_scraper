@@ -307,3 +307,36 @@ def reiniciar_chrome():
         return {"mensaje": "Chrome reiniciado", "osiptel_cargado": ok}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+        
+@app.get("/diagnostico")
+def diagnostico():
+    """Verifica si Chrome puede acceder a internet y a OSIPTEL."""
+    drv = driver_mgr.get()
+    resultados = {}
+    
+    # Test 1: Google
+    try:
+        drv.get("https://www.google.com")
+        WebDriverWait(drv, 15).until(EC.presence_of_element_located((By.NAME, "q")))
+        resultados["google"] = "OK"
+    except Exception as e:
+        resultados["google"] = f"FALLO: {str(e)[:100]}"
+    
+    # Test 2: OSIPTEL
+    try:
+        drv.get("https://checatuslineas.osiptel.gob.pe/")
+        WebDriverWait(drv, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+        resultados["osiptel_body"] = "OK"
+        resultados["osiptel_title"] = drv.title
+        resultados["osiptel_url"] = drv.current_url
+        # Ver si el formulario existe
+        try:
+            drv.find_element(By.ID, "IdTipoDoc")
+            resultados["formulario"] = "OK"
+        except:
+            resultados["formulario"] = "NO ENCONTRADO"
+            resultados["page_source_inicio"] = drv.page_source[:500]
+    except Exception as e:
+        resultados["osiptel_body"] = f"FALLO: {str(e)[:100]}"
+    
+    return resultados
