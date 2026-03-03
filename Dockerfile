@@ -27,13 +27,22 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     --no-install-recommends
 
-# Instalar Google Chrome estable
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
-    >> /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable --no-install-recommends \
+# Instalar Google Chrome usando método moderno (sin apt-key)
+RUN wget -q -O /tmp/google-chrome.deb \
+    https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get install -y /tmp/google-chrome.deb --no-install-recommends \
+    && rm /tmp/google-chrome.deb \
     && rm -rf /var/lib/apt/lists/*
+
+# Instalar ChromeDriver compatible con la versión de Chrome instalada
+RUN CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+') \
+    && CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${CHROME_VERSION%%.*}") \
+    && wget -q -O /tmp/chromedriver.zip \
+    "https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip" \
+    && unzip /tmp/chromedriver.zip -d /tmp/ \
+    && mv /tmp/chromedriver-linux64/chromedriver /usr/bin/chromedriver \
+    && chmod +x /usr/bin/chromedriver \
+    && rm -rf /tmp/chromedriver*
 
 # Directorio de trabajo
 WORKDIR /app
