@@ -298,10 +298,16 @@ def scrape_ruc(ruc: str) -> Dict:
 # ===================== ENDPOINTS =====================
 @app.on_event("startup")
 async def startup():
-    print("🚀 Iniciando API OSIPTEL...")
-    driver_mgr.build()
-    driver_mgr.go_home()
-    print("✅ API lista.")
+    print("🚀 API OSIPTEL lista. Chrome iniciara en la primera consulta.")
+
+@app.get("/warmup")
+def warmup():
+    try:
+        driver_mgr.build()
+        driver_mgr.go_home()
+        return {"mensaje": "Chrome listo y OSIPTEL cargado"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.on_event("shutdown")
 async def shutdown():
