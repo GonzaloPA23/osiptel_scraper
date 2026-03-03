@@ -110,7 +110,8 @@ class DriverManager:
             opts.add_argument("--disable-gpu")
             opts.add_argument("--window-size=1920,1080")
             opts.add_argument("--disable-setuid-sandbox")
-            opts.add_argument("--remote-debugging-port=9222")
+            opts.add_argument("--disable-extensions")
+            opts.add_argument("--dns-prefetch-disable")
             # Usar Chrome instalado en el sistema (Docker)
             opts.binary_location = "/usr/bin/google-chrome"
         else:
